@@ -1,4 +1,4 @@
-#!
+#!/bin/bash
 
 if [ "$1" != "" ]; then
 	docker stop nginx && docker rm nginx
