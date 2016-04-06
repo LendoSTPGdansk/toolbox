@@ -9,6 +9,8 @@ _ELASTICSEARCH_CONTAINER="elasticsearch"
 _NGINX_CONTAINER="nginx"
 _PHP_CONTAINER="php"
 
+_STORAGE_DIR="/mnt/sda1/storage"
+
 while [ $# -gt 1 ]
 do
 key="$1"
@@ -33,27 +35,36 @@ done
 checkContainers () {
 	RUNNING=$(docker inspect --format="{{ .State.Running }}" $1 2> /dev/null)
 
-	if [ "$?" = '' ]; then
-		return 0 # not exist
-	fi
-
-	if test "$RUNNING" = 'true'; then
-		return 1
-	else
+	if [ "$RUNNING" != 'true' ]; then
 		return 0
+	else
+		return 1
 	fi
 }
 
 checkContainers ${_EVENTSTORE_CONTAINER}
 if [ $? -eq 0 ]; then 
 	echo "Starting ${_EVENTSTORE_CONTAINER} container"
-	docker run -d --name ${_EVENTSTORE_CONTAINER} -v /mnt/sda1/var/lib/eventstore-data:/data/db -v /mnt/sda1/var/lib/eventstore-logs:/data/logs tetsuobe/geteventstore:release-v3.5.0
+	mkdir -p ${_STORAGE_DIR}/eventstore-data
+	mkdir -p ${_STORAGE_DIR}/eventstore-logs
+	docker run -d --name ${_EVENTSTORE_CONTAINER} -v ${_STORAGE_DIR}/eventstore-data:/data/db -v ${_STORAGE_DIR}/eventstore-logs:/data/logs tetsuobe/geteventstore:release-v3.5.0
+fi
+checkContainers ${_EVENTSTORE_CONTAINER}
+if [ $? -eq 1 ]; then 
+	echo "Container ${_EVENTSTORE_CONTAINER} not running!"
+	exit 0
 fi
 
 checkContainers ${_ELASTICSEARCH_CONTAINER}
 if [ $? -eq 0 ]; then 
 	echo "Starting ${_ELASTICSEARCH_CONTAINER} container"
-	docker run -d --name ${_ELASTICSEARCH_CONTAINER} -v /mnt/sda1/var/lib/elasticsearch-data:/usr/share/elasticsearch/data elasticsearch
+	mkdir -p ${_STORAGE_DIR}/elasticsearch-data
+	docker run -d --name ${_ELASTICSEARCH_CONTAINER} -v ${_STORAGE_DIR}/elasticsearch-data:/usr/share/elasticsearch/data elasticsearch
+fi
+checkContainers ${_ELASTICSEARCH_CONTAINER}
+if [ $? -eq 1 ]; then 
+	echo "Container ${_ELASTICSEARCH_CONTAINER} not running!"
+	exit 0
 fi
 
 echo "Deploying build: ${_BUILD}"
