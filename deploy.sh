@@ -47,13 +47,13 @@ checkContainers () {
 checkContainers ${_EVENTSTORE_CONTAINER}
 if [ $? -eq 0 ]; then 
 	echo "Starting ${_EVENTSTORE_CONTAINER} container"
-	docker run -d --name ${_EVENTSTORE_CONTAINER} tetsuobe/geteventstore:release-v3.5.0
+	docker run -d --name ${_EVENTSTORE_CONTAINER} -v /mnt/sda1/var/lib/eventstore-data:/data/db -v /mnt/sda1/var/lib/eventstore-logs:/data/logs tetsuobe/geteventstore:release-v3.5.0
 fi
 
 checkContainers ${_ELASTICSEARCH_CONTAINER}
 if [ $? -eq 0 ]; then 
 	echo "Starting ${_ELASTICSEARCH_CONTAINER} container"
-	docker run -d --name ${_ELASTICSEARCH_CONTAINER} elasticsearch
+	docker run -d --name ${_ELASTICSEARCH_CONTAINER} -v /mnt/sda1/var/lib/elasticsearch-data:/usr/share/elasticsearch/data elasticsearch
 fi
 
 echo "Deploying build: ${_BUILD}"
