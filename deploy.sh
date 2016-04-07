@@ -50,7 +50,7 @@ if [ $? -eq 0 ]; then
 	docker run -d --name ${_EVENTSTORE_CONTAINER} -v ${_STORAGE_DIR}/eventstore-data:/data/db -v ${_STORAGE_DIR}/eventstore-logs:/data/logs tetsuobe/geteventstore:release-v3.5.0
 fi
 checkContainers ${_EVENTSTORE_CONTAINER}
-if [ $? -eq 1 ]; then 
+if [ $? -eq 0 ]; then 
 	echo "Container ${_EVENTSTORE_CONTAINER} not running!"
 	exit 0
 fi
@@ -62,7 +62,7 @@ if [ $? -eq 0 ]; then
 	docker run -d --name ${_ELASTICSEARCH_CONTAINER} -v ${_STORAGE_DIR}/elasticsearch-data:/usr/share/elasticsearch/data elasticsearch
 fi
 checkContainers ${_ELASTICSEARCH_CONTAINER}
-if [ $? -eq 1 ]; then 
+if [ $? -eq 0 ]; then 
 	echo "Container ${_ELASTICSEARCH_CONTAINER} not running!"
 	exit 0
 fi
