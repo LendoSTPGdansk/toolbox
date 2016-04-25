@@ -4,10 +4,13 @@ _IMAGE=""
 _BUILD="latest"
 _WORKDIR=""
 
-_EVENTSTORE_CONTAINER="eventstore"
-_ELASTICSEARCH_CONTAINER="elasticsearch"
+_EVENTSTORAGE_CONTAINER="eventstorage"
+_PROJECTIONSTORAGE_CONTAINER="projectionstorage"
 _NGINX_CONTAINER="nginx"
 _PHP_CONTAINER="php"
+
+_EVENTSTORAGE_IMAGE="cassandra:2.2"
+_PROJECTIONSTORAGE_IMAGE="elasticsearch"
 
 _STORAGE_DIR="/mnt/sda1/storage"
 
@@ -42,28 +45,27 @@ checkContainers () {
 	fi
 }
 
-checkContainers ${_EVENTSTORE_CONTAINER}
+checkContainers ${_EVENTSTORAGE_CONTAINER}
 if [ $? -eq 0 ]; then 
-	echo "Starting ${_EVENTSTORE_CONTAINER} container"
-	mkdir -p ${_STORAGE_DIR}/eventstore-data
-	mkdir -p ${_STORAGE_DIR}/eventstore-logs
-	docker run -d --name ${_EVENTSTORE_CONTAINER} -v ${_STORAGE_DIR}/eventstore-data:/data/db -v ${_STORAGE_DIR}/eventstore-logs:/data/logs tetsuobe/geteventstore:release-v3.5.0
+	echo "Starting ${_EVENTSTORE_IMAGE} as EventStorage container"
+	mkdir -p ${_STORAGE_DIR}/${_EVENTSTORAGE_CONTAINER}
+	docker run -d --name ${_EVENTSTORAGE_CONTAINER} -v ${_STORAGE_DIR}/${_EVENTSTORAGE_CONTAINER}:/vat/lib/cassandra ${_EVENTSTORAGE_IMAGE}
 fi
-checkContainers ${_EVENTSTORE_CONTAINER}
+checkContainers ${_EVENTSTORAGE_CONTAINER}
 if [ $? -eq 0 ]; then 
-	echo "Container ${_EVENTSTORE_CONTAINER} not running!"
+	echo "EventStorage not running!"
 	exit 0
 fi
 
-checkContainers ${_ELASTICSEARCH_CONTAINER}
+checkContainers ${_PROJECTIONSTORAGE_CONTAINER}
 if [ $? -eq 0 ]; then 
-	echo "Starting ${_ELASTICSEARCH_CONTAINER} container"
-	mkdir -p ${_STORAGE_DIR}/elasticsearch-data
-	docker run -d --name ${_ELASTICSEARCH_CONTAINER} -v ${_STORAGE_DIR}/elasticsearch-data:/usr/share/elasticsearch/data elasticsearch
+	echo "Starting ${_ELASTICSEARCH_IMAGE} as ProjectionStorage container"
+	mkdir -p ${_STORAGE_DIR}/${_PROJECTIONSTORAGE_CONTAINER}
+	docker run -d --name ${_PROJECTIONSTORAGE_CONTAINER} -v ${_STORAGE_DIR}/${_PROJECTIONSTORAGE_CONTAINER}:/usr/share/elasticsearch/data ${_PROJECTIONSTORAGE_IMAGE}
 fi
-checkContainers ${_ELASTICSEARCH_CONTAINER}
+checkContainers ${_PROJECTIONSTORAGE_CONTAINER}
 if [ $? -eq 0 ]; then 
-	echo "Container ${_ELASTICSEARCH_CONTAINER} not running!"
+	echo "ProjecitonStorage not running!"
 	exit 0
 fi
 
@@ -86,7 +88,7 @@ if [ "${_IMAGE}" != "" ]; then
 	fi
 
 	echo "Creating PHP container"
-	docker run -d --link ${_ELASTICSEARCH_CONTAINER} --link ${_EVENTSTORE_CONTAINER} --name ${_PHP_CONTAINER} -v /var/www ${_IMAGE}:${_BUILD}-php-qa
+	docker run -d --link ${_PROJECTIONSTORAGE_CONTAINER} --link ${_EVENTSTORAGE_CONTAINER} --name ${_PHP_CONTAINER} -v /var/www ${_IMAGE}:${_BUILD}-php-qa
 
 	echo "Creating NGINX container"
 	docker cp ${_PHP_CONTAINER}:/var/www/docker/vhost-remote.conf /root/service/docker
