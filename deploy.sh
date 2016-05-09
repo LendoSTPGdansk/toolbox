@@ -49,7 +49,7 @@ checkContainers ${_EVENTSTORAGE_CONTAINER}
 if [ $? -eq 0 ]; then 
 	echo "Starting ${_EVENTSTORE_IMAGE} as EventStorage container"
 	mkdir -p ${_STORAGE_DIR}/${_EVENTSTORAGE_CONTAINER}
-	docker run -d --name ${_EVENTSTORAGE_CONTAINER} -v ${_STORAGE_DIR}/${_EVENTSTORAGE_CONTAINER}:/vat/lib/cassandra ${_EVENTSTORAGE_IMAGE}
+	docker run -d --name ${_EVENTSTORAGE_CONTAINER} -v ${_STORAGE_DIR}/${_EVENTSTORAGE_CONTAINER}:/var/lib/cassandra ${_EVENTSTORAGE_IMAGE}
 fi
 checkContainers ${_EVENTSTORAGE_CONTAINER}
 if [ $? -eq 0 ]; then 
