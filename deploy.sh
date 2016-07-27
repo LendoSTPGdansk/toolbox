@@ -4,6 +4,8 @@ _IMAGE=""
 _BUILD="latest"
 _WORKDIR=""
 
+_EVENTSTORAGE_ADDRESS="139.59.130.119"
+
 _PROJECTIONSTORAGE_CONTAINER="projectionstorage"
 _NGINX_CONTAINER="nginx"
 _PHP_CONTAINER="php"
@@ -79,6 +81,9 @@ if [ "${_IMAGE}" != "" ]; then
 	echo "Creating NGINX container"
 	docker cp ${_PHP_CONTAINER}:/var/www/docker/vhost-remote.conf /root/service/docker
 	docker run -d -p 80:80 --name ${_NGINX_CONTAINER} --link ${_PHP_CONTAINER} -v /root/service/docker/vhost-remote.conf:/etc/nginx/conf.d/default.conf --volumes-from ${_PHP_CONTAINER} nginx:1.9.12
+
+    echo "Add eventstorage to hosts"
+    docker exec ${_PHP_CONTAINER} bash -c "echo '${_EVENTSTORAGE_ADDRESS} eventstorage' >> /etc/hosts"
 
 	echo "Setup environment"
 	docker exec ${_PHP_CONTAINER} bash -c "sh ${_WORKDIR}bin/startup.sh --workdir ${_WORKDIR} > /dev/null 2>&1"
